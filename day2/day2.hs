@@ -21,6 +21,9 @@ instance Semigroup Round where
 tupleMap :: (a -> b) -> (a, a) -> (b, b)
 tupleMap f (a, b) = (f a, f b)
 
+flip' :: (a, b) -> (b, a)
+flip' (a, b) = (b, a)
+
 wordsWhen :: (Char -> Bool) -> String -> [String]
 wordsWhen p s = case dropWhile p s of
   "" -> []
@@ -54,16 +57,14 @@ toRoundPart1 c
   | c == 'C' || c == 'Z' = initScissors
   | otherwise = error "Not a valid Input"
 
-toRoundPart2 :: (Char, Char) -> (Round, Round)
-toRoundPart2 ('A', 'Z') = (initRock, initPaper)
-toRoundPart2 ('B', 'Z') = (initPaper, initScissors)
-toRoundPart2 ('C', 'Z') = (initScissors, initRock)
-toRoundPart2 ('A', 'Y') = (initRock, initRock)
-toRoundPart2 ('B', 'Y') = (initPaper, initPaper)
-toRoundPart2 ('C', 'Y') = (initScissors, initScissors)
-toRoundPart2 ('A', 'X') = (initRock, initScissors)
-toRoundPart2 ('B', 'X') = (initPaper, initRock)
-toRoundPart2 ('C', 'X') = (initScissors, initPaper)
+toRoundPart2 :: (Round, Char) -> (Round, Round)
+toRoundPart2 (round, 'Y') = (round, round)
+toRoundPart2 (rock@(Round _ Rock _), 'Z') = (rock, initPaper)
+toRoundPart2 (paper@(Round _ Paper _), 'Z') = (paper, initScissors)
+toRoundPart2 (scissors@(Round _ Scissors _), 'Z') = (scissors, initRock)
+toRoundPart2 (rock@(Round _ Rock _), 'X') = (rock, initScissors)
+toRoundPart2 (paper@(Round _ Paper _), 'X') = (paper, initRock)
+toRoundPart2 (scissors@(Round _ Scissors _), 'X') = (initScissors, initPaper)
 
 score :: Round -> Int
 score (Round _ _ i) = i
@@ -71,7 +72,7 @@ score (Round _ _ i) = i
 main :: IO ()
 main = do
   input <- readFile "day2-input.txt"
-  let handsPart1 = map ((\(a, b) -> (b, a)) . tupleMap toRoundPart1 . splitIntoPairs) . lines $ input
-  let handsPart2 = map ((\(a, b) -> (b, a)) . toRoundPart2 . splitIntoPairs) . lines $ input
+  let handsPart1 = map (flip' . tupleMap toRoundPart1 . splitIntoPairs) . lines $ input
+  let handsPart2 = map (flip' . toRoundPart2 . flip' . fmap toRoundPart1 . flip' . splitIntoPairs) . lines $ input
   let completeRounds = map (uncurry (<>)) handsPart2
   print $ sum . map score $ completeRounds
