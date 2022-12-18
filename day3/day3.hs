@@ -58,8 +58,11 @@ priorities =
     ('Z', 52)
   ]
 
-halve :: String -> (String, String)
-halve xs = splitAt (n `div` 2) xs where n = length xs
+pairToList :: (a, a) -> [a]
+pairToList (x, y) = [x, y]
+
+halve :: String -> [String]
+halve xs = pairToList $ splitAt (n `div` 2) xs where n = length xs
 
 contains :: Eq a => [a] -> a -> Bool
 contains xs x = case xs of
@@ -67,9 +70,9 @@ contains xs x = case xs of
   v : vs | x == v -> True
   _ : vs -> contains vs x
 
-common :: String -> String -> Maybe Char
-common xs ys = do
-  let same = common' xs ys
+common :: [String] -> Maybe Char
+common xs = do
+  let same = foldr common' (head xs) (drop 1 xs)
   if null same then Nothing else Just (head same)
 
 common' :: String -> String -> String
@@ -78,10 +81,25 @@ common' sack1 sack2 = [x | x <- sack1, contains sack2 x]
 lookup' :: Maybe Char -> Int
 lookup' (Just k) = fromMaybe 0 $ lookup k priorities
 
+group :: Int -> [a] -> [[a]]
+group _ [] = []
+group n l
+  | n > 0 = take n l : group n (drop n l)
+  | otherwise = error "Negative Number or Zero"
+
 main :: IO ()
 main = do
   file <- readFile "day3-input.txt"
-  let rucksacks = map halve $ lines file
-  let items = map (uncurry common) rucksacks
-  let priorities = map lookup' items
-  print $ sum priorities
+  let rucksacks = lines file
+
+  let compartments = map halve rucksacks
+  let compartmentItems = map common compartments
+  let compartmentPriorities = map lookup' compartmentItems
+  putStr "Compartment Priorities: "
+  print $ sum compartmentPriorities
+
+  let groups = group 3 rucksacks
+  let groupItems = map common groups
+  let groupPriorities = map lookup' groupItems
+  putStr "Group Priorities: "
+  print $ sum groupPriorities
