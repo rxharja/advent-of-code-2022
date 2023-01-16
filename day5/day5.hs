@@ -53,11 +53,6 @@ parse s =
 replicate' :: Action -> a -> [a]
 replicate' (Action i) = replicate i
 
-moveCrate :: Stack a -> Stack a -> (Stack a, Stack a)
-moveCrate start end = case pop start of
-  Just (crate, stack) -> (stack, push crate end)
-  Nothing -> (start, end)
-
 move :: Start -> End -> Stacks -> Maybe Stacks
 move (Location s) (Location e) stacks = do
   (crate, poppedStack) <- lookup s stacks >>= pop
