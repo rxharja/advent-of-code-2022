@@ -19,12 +19,26 @@ parse s = ((read $ head fstPair, read $ last fstPair), (read $ head lstPair, rea
     lstPair = last . pairs $ s
 
 completelyContains :: (Int, Int) -> (Int, Int) -> Bool
-completelyContains (s1, e1) (s2, e2) = (s1 <= s2 && e1 >= e2) || (s2 <= s1 && e2 >= e1)
+completelyContains (x1, y1) (x2, y2) =
+  (x1 <= x2 && y1 >= y2)
+    || (x2 <= x1 && y2 >= y1)
+
+partiallyContains :: (Int, Int) -> (Int, Int) -> Bool
+partiallyContains (x1, x2) (y1, y2) = x2 >= y1 && y2 >= x1
 
 main :: IO ()
 main = do
   input <- readFile "day4-input.txt"
   let pairs = map parse $ lines input
+
   let pairsContainedList = map (uncurry completelyContains) pairs
-  let totalContains = sum [1 | contains <- pairsContainedList, contains]
-  print totalContains
+  let pairsContainedPartiallyList = map (uncurry partiallyContains) pairs
+
+  let totalCompleteContains = sum [1 | contains <- pairsContainedList, contains]
+  let totalPartialContains = sum [1 | contains <- pairsContainedPartiallyList, contains]
+
+  putStr "Pairs that are completely contained by the other: "
+  print totalCompleteContains
+
+  putStr "Pairs that are partially contained by the other: "
+  print totalPartialContains
