@@ -60,8 +60,7 @@ replicate' (Action i) = replicate i
 move :: Start -> End -> Stacks -> Maybe Stacks
 move (Location s) (Location e) stacks = do
   (crate, poppedStack) <- lookup s stacks >>= pop
-  let movedStacks = adjust (const poppedStack) s stacks
-  return $ adjust (push crate) e movedStacks
+  return $ (adjust (push crate) e) . (adjust (const poppedStack) s) $ stacks
 
 moveStack :: Action -> Start -> End -> Stacks -> Maybe Stacks
 moveStack action s e stacks = foldM (\s f -> f s) stacks (replicate' action (move s e))
