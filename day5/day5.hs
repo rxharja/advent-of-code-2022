@@ -27,6 +27,10 @@ pop :: Stack a -> Maybe (a, Stack a)
 pop (Stack []) = Nothing
 pop (Stack (x : xs)) = Just (x, Stack xs)
 
+peek :: Stack a -> Maybe a
+peek (Stack []) = Nothing
+peek (Stack (x : xs)) = Just x
+
 stacks :: Map Int (Stack Char)
 stacks =
   fromList
@@ -69,8 +73,7 @@ popAll :: Maybe Stacks -> Maybe String
 popAll stacks = do
   stacks <- stacks
   let locations = map (`lookup` stacks) [1 .. 9]
-  let cratePairs = map (>>= pop) locations
-  let crates = map (>>= \(c, s) -> return c) cratePairs
+  let crates = map (>>= peek) locations
   return $ map (fromMaybe ' ') crates
 
 main :: IO ()
