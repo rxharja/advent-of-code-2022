@@ -3,6 +3,7 @@ module Main where
 import Control.Monad (foldM)
 import Data.Map (Map, adjust, fromList, lookup)
 import Data.Maybe (Maybe (..), fromMaybe)
+import GHC.Builtin.PrimOps (PrimOp (WhereFromOp))
 import Prelude hiding (lookup)
 
 newtype Stack a = Stack [a] deriving (Eq, Show)
@@ -23,9 +24,15 @@ empty = Stack []
 push :: a -> Stack a -> Stack a
 push x (Stack xs) = Stack (x : xs)
 
+pushMany :: [a] -> Stack a -> Stack a
+pushMany xs (Stack xs') = Stack (xs ++ xs')
+
 pop :: Stack a -> Maybe (a, Stack a)
 pop (Stack []) = Nothing
 pop (Stack (x : xs)) = Just (x, Stack xs)
+
+popMany :: Int -> Stack a -> ([a], Stack a)
+popMany i (Stack xs) = (take i xs, Stack $ drop i xs)
 
 peek :: Stack a -> Maybe a
 peek (Stack []) = Nothing
@@ -60,13 +67,22 @@ replicate' (Action i) = replicate i
 move :: Start -> End -> Stacks -> Maybe Stacks
 move (Location s) (Location e) stacks = do
   (crate, poppedStack) <- lookup s stacks >>= pop
-  return $ (adjust (push crate) e) . (adjust (const poppedStack) s) $ stacks
+  return $ adjust (push crate) e . adjust (const poppedStack) s $ stacks
 
 moveStack :: Action -> Start -> End -> Stacks -> Maybe Stacks
 moveStack action s e stacks = foldM (\s f -> f s) stacks (replicate' action (move s e))
 
+moveStack' :: Action -> Start -> End -> Stacks -> Maybe Stacks
+moveStack' (Action i) (Location s) (Location e) stacks = do
+  s1 <- lookup s stacks
+  let (xs, s1') = popMany i s1
+  return $ adjust (pushMany xs) e . adjust (const s1') s $ stacks
+
 operate :: [(Action, Start, End)] -> Stacks -> Maybe Stacks
 operate moves stacks = foldM (\stack (a, s, e) -> moveStack a s e stack) stacks moves
+
+operate' :: [(Action, Start, End)] -> Stacks -> Maybe Stacks
+operate' moves stacks = foldM (\stack (a, s, e) -> moveStack' a s e stack) stacks moves
 
 popAll :: Maybe Stacks -> Maybe String
 popAll stacks = do
@@ -80,4 +96,9 @@ main = do
   input <- readFile "day5-input.txt"
   let moves = map parse (lines input)
   let locations = operate moves stacks
+  putStr "CrateMover 9000 "
   print $ fromMaybe "Unable to complete operation :(" (popAll locations)
+
+  let locations' = operate' moves stacks
+  putStr "CrateMover 9001 "
+  print $ fromMaybe "Unable to complete operation :(" (popAll locations')
