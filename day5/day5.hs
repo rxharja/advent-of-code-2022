@@ -3,7 +3,6 @@ module Main where
 import Control.Monad (foldM)
 import Data.Map (Map, adjust, fromList, lookup)
 import Data.Maybe (Maybe (..), fromMaybe)
-import GHC.Builtin.PrimOps (PrimOp (WhereFromOp))
 import Prelude hiding (lookup)
 
 newtype Stack a = Stack [a] deriving (Eq, Show)
