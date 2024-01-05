@@ -1,29 +1,16 @@
 -- Day 1: https://adventofcode.com/2022/day/1
 module Main where
 
-import Data.List (sort)
+import Data.List (groupBy, sort)
 
-splitOnTwoNewLines :: String -> [String]
-splitOnTwoNewLines xs = go xs "" []
-  where
-    go "" _ acc = acc
-    go ('\n' : '\n' : xs) sub acc = go xs "" (acc ++ [sub])
-    go (x : xs) sub acc = go xs (sub ++ [x]) acc
+parseTotalCalories :: String -> [Int]
+parseTotalCalories = map (sum . map read . filter (/= "")) . groupBy (\_ b -> b /= "") . lines
 
-elfCalories :: String -> [Int]
-elfCalories = map (sum . map read . words) . splitOnTwoNewLines
+top :: Ord a => Int -> [a] -> [a]
+top n = take n . reverse . sort
 
 main :: IO ()
 main = do
-  input <- readFile "day1-input.txt"
-  let calories = elfCalories input
-  let top3 = (take 3 . reverse . sort) calories
-
-  putStr "Elf with Max Calories: "
-  print $ maximum calories
-
-  putStr "Top 3 Calories: "
-  print top3
-
-  putStr "sum of Top 3 Calories: "
-  print $ sum top3
+  input <- readFile "input.txt"
+  putStr "Max Calories: "; print . head . top 1 . parseTotalCalories $ input
+  putStr "Top 3 Calories Combined: "; print . sum . top 3 . parseTotalCalories $ input
